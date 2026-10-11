@@ -1,0 +1,3 @@
+\set lo random(1, :dom - :span)
+\set hi :lo + :span
+SELECT count(payload) FROM bench WHERE id BETWEEN :lo AND :hi;

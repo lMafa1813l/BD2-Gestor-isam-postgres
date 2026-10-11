@@ -1,0 +1,16 @@
+__pycache__/
+*.pyc
+*.o
+*.so
+*.bc
+*.log
+*.csv.gen
+.vscode/
+.idea/
+tempCodeRunnerFile.py
+datasets/generated/
+benchmarks/results/
+tests/test_isam_core
+*.isam
+tests/test_isam_insert
+*.bc

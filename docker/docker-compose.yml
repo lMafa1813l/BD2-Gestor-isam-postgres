@@ -1,0 +1,20 @@
+services:
+  pg:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+      args:
+        PG_VERSION: "${PG_VERSION:-18}"
+    container_name: isam_pg
+    environment:
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: bd2
+    ports:
+      - "5433:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql
+      - ../tests/sql:/tests/sql:ro
+      - ../workloads:/workloads:ro
+
+volumes:
+  pgdata:

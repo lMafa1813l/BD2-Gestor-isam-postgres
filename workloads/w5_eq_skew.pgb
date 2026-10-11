@@ -1,0 +1,2 @@
+\set k random_zipfian(1, :dom, 1.1)
+SELECT count(payload) FROM bench WHERE id = :k;

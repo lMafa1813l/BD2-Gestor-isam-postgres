@@ -1,0 +1,4 @@
+comment = 'ISAM index access method (BD2 - grupo 9)'
+default_version = '1.1'
+module_pathname = '$libdir/isam_am'
+relocatable = true

@@ -1,0 +1,3 @@
+\set r random(1, :dom)
+\set k :dom + :r
+SELECT count(payload) FROM bench WHERE id = :k;
