@@ -1,0 +1,42 @@
+Overflow adicional: N inicial = 100000, 5 trayectorias independientes por configuración, 6 lotes de 20000 filas y 1000 consultas calientes por punto.
+
+\begin{table}[htbp]
+\centering\small
+\caption{Lectura caliente inicial, final y después de REINDEX: mediana [IQR].}\label{tab:overflow}
+\resizebox{\linewidth}{!}{%
+\begin{tabular}{lrrrrr}
+\toprule
+Configuración & Inicial ms & Final ms & Cadena final & Tras REINDEX ms & REINDEX ms \\
+\midrule
+btree & 0.054 [0.006] & 0.531 [0.010] & 0 [0] & 0.504 [0.063] & 63.779 [1.664] \\
+isam60 & 0.053 [0.001] & 0.757 [0.034] & 110 [1] & 0.521 [0.099] & 49.909 [3.797] \\
+isam80 & 0.057 [0.006] & 0.980 [0.003] & 177 [0] & 0.547 [0.016] & 48.335 [1.321] \\
+isam100 & 0.052 [0.010] & 0.951 [0.023] & 177 [0] & 0.533 [0.036] & 44.606 [0.418] \\
+isam80t25 & 0.049 [0.003] & 0.551 [0.024] & 0 [0] & -- & -- \\
+\bottomrule
+\end{tabular}}
+\end{table}
+
+\begin{table}[htbp]
+\centering\small
+\caption{Costo acumulado por trayectoria (medianas, ms) antes del REINDEX final de comparación.}\label{tab:policy}
+\resizebox{\linewidth}{!}{%
+\begin{tabular}{lrrrr}
+\toprule
+Configuración & Inserción & Política REINDEX & Suma de costos & MiB finales \\
+\midrule
+btree & 178.466 & 0.000 & 178.466 & 2.95 \\
+isam60 & 657.916 & 0.000 & 657.916 & 3.32 \\
+isam80 & 654.008 & 0.000 & 654.008 & 2.84 \\
+isam100 & 661.393 & 0.000 & 661.393 & 2.55 \\
+isam80t25 & 859.609 & 182.187 & 1044.330 & 3.19 \\
+\bottomrule
+\end{tabular}}
+\end{table}
+
+Los costos de la política se suman por réplica antes de calcular la mediana. Una latencia final cercana a B-tree no significa regresar a la latencia inicial: las inserciones aumentan la cantidad de resultados. La eliminación de overflow tampoco implica siempre menor tamaño físico.
+
+ISAM80 pasó de una mediana de 0.057 ms a 0.980 ms, con cadena final mediana de 177 páginas. Tras REINDEX registró 0.547 ms: cambio de 44.18\% respecto del estado degradado. La mejora combina eliminación de cadenas y reorganización; la lectura de más filas y páginas del heap persiste.
+
+\begin{figure}[htbp]\centering\includegraphics[width=.95\linewidth]{docs/results/figures/overflow.pdf}\caption{Latencia caliente por lote. Los puntos de políticas incluyen el estado posterior a reorganizar.}\end{figure}
+\clearpage

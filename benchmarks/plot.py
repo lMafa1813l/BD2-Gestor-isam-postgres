@@ -1,4 +1,5 @@
 import csv
+import json
 import glob
 import os
 import statistics
@@ -11,14 +12,23 @@ try:
     import matplotlib.pyplot as plt
 except ImportError:
     print("matplotlib no esta instalado: pip install matplotlib", file=sys.stderr)
-    sys.exit(0)
+    sys.exit(1)
 
 COLORS = {"none": "#999999", "btree": "#1f77b4", "isam": "#d62728"}
 
 
 def latest(prefix):
-    files = sorted(glob.glob(os.path.join(os.path.dirname(__file__), "results", prefix + "_*.csv")))
-    return files[-1] if files else None
+    files = glob.glob(os.path.join(os.path.dirname(__file__), "results", prefix + "_*.csv"))
+    complete = []
+    for path in files:
+        meta_path = path[:-4] + ".json"
+        if os.path.exists(meta_path):
+            with open(meta_path) as fh:
+                meta = json.load(fh)
+            if meta.get("status") != "completed":
+                continue
+        complete.append(path)
+    return max(complete, key=os.path.getmtime) if complete else None
 
 
 def plot_bench(path, rows):
@@ -28,21 +38,21 @@ def plot_bench(path, rows):
     configs = ["none", "btree", "isam"]
     by = defaultdict(list)
     for r in rows:
-        by[(r["dataset"], r["workload"], r["config"])].append(float(r["tps"]))
-    for ds in sorted({r["dataset"] for r in rows}):
+        by[(r["dataset"], r["n"], r["workload"], r["config"])].append(float(r["tps"]))
+    for ds, n in sorted({(r["dataset"], r["n"]) for r in rows}, key=lambda x: (x[0], int(x[1]))):
         fig, ax = plt.subplots(figsize=(11, 4.5))
         width = 0.27
         for i, c in enumerate(configs):
-            vals = [statistics.median(by[(ds, wl, c)]) if by[(ds, wl, c)] else 0 for wl in order]
+            vals = [statistics.median(by[(ds, n, wl, c)]) if by[(ds, n, wl, c)] else 0 for wl in order]
             ax.bar([x + (i - 1) * width for x in range(len(order))], vals, width, label=c, color=COLORS[c])
         ax.set_yscale("log")
         ax.set_xticks(range(len(order)))
         ax.set_xticklabels(order, rotation=25, ha="right")
         ax.set_ylabel("transacciones por segundo (log)")
-        ax.set_title(f"{ds}: sin indice vs B-tree vs ISAM (n = {rows[0]['n']})")
+        ax.set_title(f"{ds}: sin indice vs B-tree vs ISAM (n = {n})")
         ax.legend()
         fig.tight_layout()
-        target = os.path.join(out_dir, os.path.basename(path).replace(".csv", f"_{ds}.png"))
+        target = os.path.join(out_dir, os.path.basename(path).replace(".csv", f"_{ds}_{n}.png"))
         fig.savefig(target, dpi=130)
         plt.close(fig)
         print(target)
@@ -59,8 +69,11 @@ def plot_overflow(path, rows):
     for ax, (col, title) in zip(axes, series):
         for c in configs:
             pts = [r for r in rows if r["config"] == c and r["step"] != "reindex"]
-            xs = [int(r["rows"]) for r in pts]
-            ys = [float(r[col]) / (1048576 if col == "index_bytes" else 1) for r in pts]
+            grouped = defaultdict(list)
+            for row in pts:
+                grouped[int(row["rows"])].append(float(row[col]))
+            xs = sorted(grouped)
+            ys = [statistics.median(grouped[x]) / (1048576 if col == "index_bytes" else 1) for x in xs]
             if col == "insert_ms":
                 xs, ys = xs[1:], ys[1:]
             ax.plot(xs, ys, marker="o", label=c)

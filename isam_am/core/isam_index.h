@@ -23,4 +23,9 @@ typedef enum IsamDescendMode {
 /* Desciende por los niveles del índice y devuelve el bloque DATA candidato. */
 int isam_index_descend(IsamFile *f, IsamKey key, IsamDescendMode mode, IsamBlockNo *data_blk);
 
+/* Límites de páginas a partir de separadores estáticos; comparte las lecturas
+ * del directorio cuando ambos extremos recorren la misma rama. */
+int isam_index_range_blocks(IsamFile *f, IsamKey lo, IsamKey hi,
+                            IsamBlockNo *first, IsamBlockNo *last);
+
 #endif

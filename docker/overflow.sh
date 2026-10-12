@@ -1,12 +1,14 @@
 #!/usr/bin/env bash
 set -euo pipefail
-cd "$(dirname "$0")"
-docker compose up -d --build
-echo "Esperando a PostgreSQL..."
-until docker exec isam_pg pg_isready -U postgres -d bd2 >/dev/null 2>&1; do sleep 1; done
-docker exec isam_pg psql -U postgres -d bd2 -qc "CREATE EXTENSION IF NOT EXISTS isam_am; ALTER EXTENSION isam_am UPDATE;"
-export PSQL="docker exec -i isam_pg psql -X -q -At -U postgres -d bd2"
-export PGBENCH="docker exec -i isam_pg pgbench -U postgres"
-export PGB_DB=bd2
+source "$(dirname "$0")/common.sh"
+start_pg
+if ! pg_exec psql -X -At -U postgres -d postgres -c "SELECT 1 FROM pg_database WHERE datname='isam_overflow'" | awk '$0==1 {found=1} END {exit !found}'; then
+  pg_exec createdb -U postgres isam_overflow
+fi
+pg_exec psql -X -v ON_ERROR_STOP=1 -U postgres -d isam_overflow -c "CREATE EXTENSION IF NOT EXISTS isam_am; ALTER EXTENSION isam_am UPDATE;"
+export PSQL="docker exec -i $ISAM_CONTAINER_NAME psql -X -q -At -U postgres -d isam_overflow"
+export PGBENCH="docker exec -i $ISAM_CONTAINER_NAME pgbench -U postgres"
+export PGB_DB=isam_overflow
 export WORKLOADS=/workloads
-../benchmarks/run_overflow.sh
+export DATASETS_DIR=/datasets
+bash "$repo_dir/benchmarks/run_overflow.sh"

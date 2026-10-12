@@ -1,2 +1,2 @@
 \set k random(1, :dom)
-INSERT INTO bench VALUES (:k, repeat('p', 40));
+INSERT INTO bench VALUES (:k, repeat('i', 40));

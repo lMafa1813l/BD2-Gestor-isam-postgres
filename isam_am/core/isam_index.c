@@ -199,3 +199,33 @@ int isam_index_descend(IsamFile *f, IsamKey key, IsamDescendMode mode, IsamBlock
     *data_blk = blk;
     return ISAM_OK;
 }
+
+int isam_index_range_blocks(IsamFile *f, IsamKey lo, IsamKey hi,
+                            IsamBlockNo *first, IsamBlockNo *last)
+{
+    IsamBlockNo left = f->meta.root_block, right = left;
+    IsamBlock a, b;
+
+    for (uint32_t lvl = f->meta.n_index_levels; lvl >= 1; lvl--) {
+        int rc = isam_read_block(f, left, &a);
+        if (rc != ISAM_OK) return rc;
+        if (right == left) {
+            b = a;
+        } else {
+            rc = isam_read_block(f, right, &b);
+            if (rc != ISAM_OK) return rc;
+        }
+        IsamBlockHeader *ah = isam_hdr(&a), *bh = isam_hdr(&b);
+        if (ah->type != ISAM_BLK_INDEX || bh->type != ISAM_BLK_INDEX ||
+            ah->level != lvl || bh->level != lvl ||
+            ah->nentries == 0 || bh->nentries == 0)
+            return ISAM_ERR_CORRUPT;
+        uint32_t li = count_before(isam_idx_entries(&a), ah->nentries, lo, ISAM_DESCEND_LOWER);
+        uint32_t ri = count_before(isam_idx_entries(&b), bh->nentries, hi, ISAM_DESCEND_UPPER);
+        left = isam_idx_entries(&a)[li == 0 ? 0 : li - 1].child;
+        right = isam_idx_entries(&b)[ri == 0 ? 0 : ri - 1].child;
+    }
+    *first = left;
+    *last = right;
+    return ISAM_OK;
+}

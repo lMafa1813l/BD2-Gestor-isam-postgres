@@ -1,5 +1,9 @@
 # Bloque 4: integración con PostgreSQL
 
+> Bitácora histórica. La revisión actual corrige el escaneo tras VACUUM, añade
+> `tests/sql/caso-vacuum.sql` y valida Docker con PostgreSQL 18.6. Los conteos y
+> estados anteriores de esta bitácora se conservan como antecedentes.
+
 El núcleo ISAM (`isam_am/core/`) ahora vive dentro de las páginas de PostgreSQL y el Access Method (`isam_am/*.c`) ya no es un "hello world".
 
 ## Qué cambió en el núcleo

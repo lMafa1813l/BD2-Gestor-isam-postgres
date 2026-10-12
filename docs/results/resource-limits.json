@@ -1,0 +1,7 @@
+{
+  "platform": "Linux-6.18.44-x86_64-with-glibc2.41",
+  "host_cpus": 5,
+  "cpu_affinity_count": 5,
+  "cgroup_cpu_max": "400000 100000",
+  "cgroup_memory_max": "34359738368"
+}

@@ -3,18 +3,31 @@ services:
     build:
       context: ..
       dockerfile: docker/Dockerfile
+      network: host
+      extra_hosts:
+        - "${BUILD_PROXY_HOST:-proxy}:${BUILD_PROXY_IP:-127.0.0.1}"
       args:
-        PG_VERSION: "${PG_VERSION:-18}"
-    container_name: isam_pg
+        HTTP_PROXY: "${HTTP_PROXY:-}"
+        HTTPS_PROXY: "${HTTPS_PROXY:-}"
+        http_proxy: "${http_proxy:-}"
+        https_proxy: "${https_proxy:-}"
+      secrets:
+        - proxy_ca
+    container_name: "${ISAM_CONTAINER_NAME:-isam_pg}"
     environment:
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: bd2
     ports:
-      - "5433:5432"
+      - "127.0.0.1:${ISAM_PORT:-5433}:5432"
     volumes:
       - pgdata:/var/lib/postgresql
       - ../tests/sql:/tests/sql:ro
       - ../workloads:/workloads:ro
+      - ../datasets:/datasets:ro
+
+secrets:
+  proxy_ca:
+    file: "${CODEX_PROXY_CERT:-/etc/ssl/certs/ca-certificates.crt}"
 
 volumes:
   pgdata:

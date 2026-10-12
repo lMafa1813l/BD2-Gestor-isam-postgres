@@ -12,3 +12,6 @@ PG_CFLAGS = -Wno-declaration-after-statement
 PG_CONFIG ?= pg_config
 PGXS := $(shell $(PG_CONFIG) --pgxs)
 include $(PGXS)
+
+# Recompilar los adaptadores cuando cambia el layout de IsamScan o del núcleo.
+$(OBJS): isam_am.h $(wildcard core/*.h)

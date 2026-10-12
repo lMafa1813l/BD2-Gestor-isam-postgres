@@ -1,0 +1,9 @@
+{
+  "status": "validated",
+  "benchmark_observations": 810,
+  "overflow_observations": 195,
+  "independent_runs": 135,
+  "independent_index_builds": 90,
+  "benchmark_csv_sha256": "b47b058955c83232164c72375993556d24baec700b919cf21eedb19a170fd826",
+  "overflow_csv_sha256": "d48a0cf9245f669fe59c0895a312fa0a984ca1d3a32211c8f209846701407959"
+}

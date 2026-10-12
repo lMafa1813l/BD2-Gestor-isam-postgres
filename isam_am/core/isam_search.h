@@ -26,7 +26,6 @@ typedef struct IsamScan {
     uint32_t    pos;
     uint32_t    chain_hops;
     int         in_chain;
-    int         past_hi;       /* ya se pasó del límite superior en el bloque primario */
     int         done;
 } IsamScan;
 

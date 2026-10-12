@@ -1,3 +1,7 @@
+> Análisis histórico exploratorio. Sus CSV y definiciones D2/D3 preceden las
+> correcciones metodológicas. Para la entrega revisada consultar `report.tex`
+> y los resultados verificados de `docs/results/`; no mezclar ambas corridas.
+
 # Análisis de los resultados en PostgreSQL 18.6
 
 Datos: `bench_20261011_134445.csv` (N = 1 000 000, T = 20 s, REPS = 3, 4 clientes) y `overflow_20261011_133942.csv` (D3, N = 200 000, modo `dist`).

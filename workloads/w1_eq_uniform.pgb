@@ -1,2 +1,6 @@
-\set k random(1, :dom)
+\if :skew
+  \set k random_zipfian(1, :dom, 1.1)
+\else
+  \set k random(1, :dom)
+\endif
 SELECT count(payload) FROM bench WHERE id = :k;

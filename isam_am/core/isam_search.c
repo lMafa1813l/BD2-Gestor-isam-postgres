@@ -21,15 +21,26 @@ int isam_scan_begin(IsamScan *s, IsamFile *f, IsamBound lo, IsamBound hi)
     s->pos = 0;
     s->chain_hops = 0;
     s->in_chain = 0;
-    s->past_hi = 0;
     s->done = 0;
     s->last_data = f->meta.first_data_block + f->meta.n_data_blocks - 1;
 
-    if (lo.present) {
+    if (lo.present && hi.present &&
+        (lo.key > hi.key || (lo.key == hi.key && (!lo.inclusive || !hi.inclusive)))) {
+        s->done = 1;
+        return ISAM_OK;
+    }
+    if (lo.present && hi.present) {
+        rc = isam_index_range_blocks(f, lo.key, hi.key, &s->primary, &s->last_data);
+        if (rc != ISAM_OK) return rc;
+    } else if (lo.present) {
         rc = isam_index_descend(f, lo.key, ISAM_DESCEND_LOWER, &s->primary);
         if (rc != ISAM_OK) return rc;
     } else {
         s->primary = f->meta.first_data_block;
+        if (hi.present) {
+            rc = isam_index_descend(f, hi.key, ISAM_DESCEND_UPPER, &s->last_data);
+            if (rc != ISAM_OK) return rc;
+        }
     }
     rc = isam_read_block(f, s->primary, &s->buf);
     if (rc != ISAM_OK) return rc;
@@ -59,7 +70,6 @@ int isam_scan_next(IsamScan *s, IsamEntry *out)
             if (!s->in_chain) {
                 if (below_lo(s, cur.key)) continue;
                 if (above_hi(s, cur.key)) {      /* el resto del bloque primario está ordenado: también pasa */
-                    s->past_hi = 1;
                     s->pos = h->nentries;
                     break;
                 }
@@ -81,7 +91,7 @@ int isam_scan_next(IsamScan *s, IsamEntry *out)
             continue;
         }
 
-        if (s->past_hi || s->primary >= s->last_data) {
+        if (s->primary >= s->last_data) {
             s->done = 1;
             return 0;
         }
@@ -94,16 +104,9 @@ int isam_scan_next(IsamScan *s, IsamEntry *out)
         if (isam_hdr(&s->buf)->type != ISAM_BLK_DATA) return ISAM_ERR_CORRUPT;
         s->in_chain = 0;
         s->pos = 0;
-        /*
-         * Invariante ISAM: toda entrada de un bloque (y de su overflow) es >= a
-         * su primera clave primaria (el separador). Si esa clave ya supera el
-         * límite superior, ni el bloque ni su cadena pueden aportar más.
-         */
-        h = isam_hdr(&s->buf);
-        if (h->nentries > 0 && above_hi(s, isam_entries(&s->buf)[0].key)) {
-            s->done = 1;
-            return 0;
-        }
+        /* VACUUM puede elevar la primera clave primaria sin modificar las
+         * claves menores de overflow. last_data viene del directorio estático,
+         * no del contenido mutable del bloque: recorrer también su cadena. */
     }
     return 0;
 }

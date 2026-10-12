@@ -13,4 +13,12 @@ benchmarks/results/
 tests/test_isam_core
 *.isam
 tests/test_isam_insert
+.cache/
+.venv-report/
+report.aux
+report.log
+report.out
+report.toc
+report.fls
+report.fdb_latexmk
 *.bc

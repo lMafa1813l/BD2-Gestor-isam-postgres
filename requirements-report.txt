@@ -1,0 +1,2 @@
+# Versión empleada para las figuras del informe; no afecta al núcleo C.
+matplotlib==3.10.8

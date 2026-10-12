@@ -1,3 +1,7 @@
-\set lo random(1, :dom - :span)
+\if :skew
+  \set lo random_zipfian(1, :dom - :span, 1.1)
+\else
+  \set lo random(1, :dom - :span)
+\endif
 \set hi :lo + :span
 SELECT count(payload) FROM bench WHERE id BETWEEN :lo AND :hi;

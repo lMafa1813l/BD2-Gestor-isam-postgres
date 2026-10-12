@@ -1,0 +1,271 @@
+diff --git a/isam_am/Makefile b/isam_am/Makefile
+index 6124b5e..0670ffe 100644
+--- a/isam_am/Makefile
++++ b/isam_am/Makefile
+@@ -12,3 +12,6 @@ PG_CFLAGS = -Wno-declaration-after-statement
+ PG_CONFIG ?= pg_config
+ PGXS := $(shell $(PG_CONFIG) --pgxs)
+ include $(PGXS)
++
++# Recompilar los adaptadores cuando cambia el layout de IsamScan o del núcleo.
++$(OBJS): isam_am.h $(wildcard core/*.h)
+diff --git a/isam_am/core/isam_index.c b/isam_am/core/isam_index.c
+index f87e42a..2378672 100644
+--- a/isam_am/core/isam_index.c
++++ b/isam_am/core/isam_index.c
+@@ -199,3 +199,33 @@ int isam_index_descend(IsamFile *f, IsamKey key, IsamDescendMode mode, IsamBlock
+     *data_blk = blk;
+     return ISAM_OK;
+ }
++
++int isam_index_range_blocks(IsamFile *f, IsamKey lo, IsamKey hi,
++                            IsamBlockNo *first, IsamBlockNo *last)
++{
++    IsamBlockNo left = f->meta.root_block, right = left;
++    IsamBlock a, b;
++
++    for (uint32_t lvl = f->meta.n_index_levels; lvl >= 1; lvl--) {
++        int rc = isam_read_block(f, left, &a);
++        if (rc != ISAM_OK) return rc;
++        if (right == left) {
++            b = a;
++        } else {
++            rc = isam_read_block(f, right, &b);
++            if (rc != ISAM_OK) return rc;
++        }
++        IsamBlockHeader *ah = isam_hdr(&a), *bh = isam_hdr(&b);
++        if (ah->type != ISAM_BLK_INDEX || bh->type != ISAM_BLK_INDEX ||
++            ah->level != lvl || bh->level != lvl ||
++            ah->nentries == 0 || bh->nentries == 0)
++            return ISAM_ERR_CORRUPT;
++        uint32_t li = count_before(isam_idx_entries(&a), ah->nentries, lo, ISAM_DESCEND_LOWER);
++        uint32_t ri = count_before(isam_idx_entries(&b), bh->nentries, hi, ISAM_DESCEND_UPPER);
++        left = isam_idx_entries(&a)[li == 0 ? 0 : li - 1].child;
++        right = isam_idx_entries(&b)[ri == 0 ? 0 : ri - 1].child;
++    }
++    *first = left;
++    *last = right;
++    return ISAM_OK;
++}
+diff --git a/isam_am/core/isam_index.h b/isam_am/core/isam_index.h
+index 78854c9..477e1da 100644
+--- a/isam_am/core/isam_index.h
++++ b/isam_am/core/isam_index.h
+@@ -23,4 +23,9 @@ typedef enum IsamDescendMode {
+ /* Desciende por los niveles del índice y devuelve el bloque DATA candidato. */
+ int isam_index_descend(IsamFile *f, IsamKey key, IsamDescendMode mode, IsamBlockNo *data_blk);
+ 
++/* Límites de páginas a partir de separadores estáticos; comparte las lecturas
++ * del directorio cuando ambos extremos recorren la misma rama. */
++int isam_index_range_blocks(IsamFile *f, IsamKey lo, IsamKey hi,
++                            IsamBlockNo *first, IsamBlockNo *last);
++
+ #endif
+diff --git a/isam_am/core/isam_search.c b/isam_am/core/isam_search.c
+index 80f8b05..891c913 100644
+--- a/isam_am/core/isam_search.c
++++ b/isam_am/core/isam_search.c
+@@ -21,15 +21,26 @@ int isam_scan_begin(IsamScan *s, IsamFile *f, IsamBound lo, IsamBound hi)
+     s->pos = 0;
+     s->chain_hops = 0;
+     s->in_chain = 0;
+-    s->past_hi = 0;
+     s->done = 0;
+     s->last_data = f->meta.first_data_block + f->meta.n_data_blocks - 1;
+ 
+-    if (lo.present) {
++    if (lo.present && hi.present &&
++        (lo.key > hi.key || (lo.key == hi.key && (!lo.inclusive || !hi.inclusive)))) {
++        s->done = 1;
++        return ISAM_OK;
++    }
++    if (lo.present && hi.present) {
++        rc = isam_index_range_blocks(f, lo.key, hi.key, &s->primary, &s->last_data);
++        if (rc != ISAM_OK) return rc;
++    } else if (lo.present) {
+         rc = isam_index_descend(f, lo.key, ISAM_DESCEND_LOWER, &s->primary);
+         if (rc != ISAM_OK) return rc;
+     } else {
+         s->primary = f->meta.first_data_block;
++        if (hi.present) {
++            rc = isam_index_descend(f, hi.key, ISAM_DESCEND_UPPER, &s->last_data);
++            if (rc != ISAM_OK) return rc;
++        }
+     }
+     rc = isam_read_block(f, s->primary, &s->buf);
+     if (rc != ISAM_OK) return rc;
+@@ -59,7 +70,6 @@ int isam_scan_next(IsamScan *s, IsamEntry *out)
+             if (!s->in_chain) {
+                 if (below_lo(s, cur.key)) continue;
+                 if (above_hi(s, cur.key)) {      /* el resto del bloque primario está ordenado: también pasa */
+-                    s->past_hi = 1;
+                     s->pos = h->nentries;
+                     break;
+                 }
+@@ -81,7 +91,7 @@ int isam_scan_next(IsamScan *s, IsamEntry *out)
+             continue;
+         }
+ 
+-        if (s->past_hi || s->primary >= s->last_data) {
++        if (s->primary >= s->last_data) {
+             s->done = 1;
+             return 0;
+         }
+@@ -94,16 +104,9 @@ int isam_scan_next(IsamScan *s, IsamEntry *out)
+         if (isam_hdr(&s->buf)->type != ISAM_BLK_DATA) return ISAM_ERR_CORRUPT;
+         s->in_chain = 0;
+         s->pos = 0;
+-        /*
+-         * Invariante ISAM: toda entrada de un bloque (y de su overflow) es >= a
+-         * su primera clave primaria (el separador). Si esa clave ya supera el
+-         * límite superior, ni el bloque ni su cadena pueden aportar más.
+-         */
+-        h = isam_hdr(&s->buf);
+-        if (h->nentries > 0 && above_hi(s, isam_entries(&s->buf)[0].key)) {
+-            s->done = 1;
+-            return 0;
+-        }
++        /* VACUUM puede elevar la primera clave primaria sin modificar las
++         * claves menores de overflow. last_data viene del directorio estático,
++         * no del contenido mutable del bloque: recorrer también su cadena. */
+     }
+     return 0;
+ }
+diff --git a/isam_am/core/isam_search.h b/isam_am/core/isam_search.h
+index 1f8c5ca..5389b2c 100644
+--- a/isam_am/core/isam_search.h
++++ b/isam_am/core/isam_search.h
+@@ -26,7 +26,6 @@ typedef struct IsamScan {
+     uint32_t    pos;
+     uint32_t    chain_hops;
+     int         in_chain;
+-    int         past_hi;       /* ya se pasó del límite superior en el bloque primario */
+     int         done;
+ } IsamScan;
+ 
+diff --git a/tests/test_isam_insert.c b/tests/test_isam_insert.c
+index 633ddd9..5248a3e 100644
+--- a/tests/test_isam_insert.c
++++ b/tests/test_isam_insert.c
+@@ -347,6 +347,45 @@ static void test_tail_pointer(void)
+     free(r.a);
+ }
+ 
++static int dead_first_original(const IsamEntry *e, void *arg)
++{
++    IsamKey key = *(IsamKey *) arg;
++    return e->key == key && e->tid_blk < 10000000;
++}
++
++static void test_vacuum_primary_min(void)
++{
++    printf("[8] VACUUM eleva el minimo primario pero conserva claves menores en overflow\n");
++    const char *path = "/tmp/t_i_vacuum_min.isam";
++    IsamFile f;
++    Ref r;
++    IsamKey boundary = ISAM_DATA_CAPACITY;
++    uint64_t removed, remaining;
++    build_ref(&f, path, &r, 2 * ISAM_DATA_CAPACITY, 1, 100, 1);
++    insert_key(&f, &r, boundary);
++    CHECK(isam_delete_if(&f, dead_first_original, &boundary, &removed, &remaining) == ISAM_OK);
++    CHECK(removed == 1 && remaining == r.n - 1);
++    uint64_t keep = 0;
++    for (uint64_t i = 0; i < r.n; i++)
++        if (!dead_first_original(&r.a[i], &boundary)) r.a[keep++] = r.a[i];
++    r.n = keep;
++    verify_eq(&f, &r, boundary);
++    verify_range(&f, &r, boundary - 1, boundary);
++    verify_range(&f, &r, boundary, boundary);
++    verify_range(&f, &r, boundary + 1, boundary + 2);
++    IsamScan scan;
++    IsamEntry e;
++    IsamBound lo = {1, 0, boundary}, hi = {1, 0, boundary + 1};
++    CHECK(isam_scan_begin(&scan, &f, lo, hi) == ISAM_OK);
++    CHECK(isam_scan_next(&scan, &e) == 0);
++    CHECK(isam_close(&f) == ISAM_OK);
++    CHECK(isam_open(&f, path, 0) == ISAM_OK);
++    verify_eq(&f, &r, boundary);
++    isam_close(&f);
++    unlink(path);
++    free(r.a);
++}
++
+ int main(void)
+ {
+     test_empty();
+@@ -356,6 +395,7 @@ int main(void)
+     test_persistence();
+     test_delete();
+     test_tail_pointer();
++    test_vacuum_primary_min();
+     printf("\n%d verificaciones, %d fallos\n", checks, fails);
+     return fails ? 1 : 0;
+ }
+diff --git a/tests/sql/caso-vacuum.sql b/tests/sql/caso-vacuum.sql
+new file mode 100644
+index 0000000..3910cae
+--- /dev/null
++++ b/tests/sql/caso-vacuum.sql
+@@ -0,0 +1,62 @@
++\set ON_ERROR_STOP on
++\pset pager off
++CREATE EXTENSION IF NOT EXISTS isam_am;
++DROP TABLE IF EXISTS regression_vacuum;
++CREATE TABLE regression_vacuum(id int, v text);
++INSERT INTO regression_vacuum SELECT g, 'base' FROM generate_series(1,1358) g;
++SET isam_am.fill_pct=100;
++CREATE INDEX regression_vacuum_idx ON regression_vacuum USING isam_am(id);
++RESET isam_am.fill_pct;
++INSERT INTO regression_vacuum VALUES (680,'superviviente');
++DELETE FROM regression_vacuum WHERE id=680 AND v='base';
++VACUUM regression_vacuum;
++SET enable_seqscan=off;
++SET enable_bitmapscan=off;
++EXPLAIN (COSTS OFF) SELECT v FROM regression_vacuum WHERE id=680;
++SELECT v FROM regression_vacuum WHERE id=680;
++DO $$ BEGIN
++  ASSERT (SELECT count(*) FROM regression_vacuum WHERE id=680)=1,
++         'VACUUM oculto la fila superviviente de overflow';
++  ASSERT (SELECT count(*) FROM regression_vacuum WHERE id BETWEEN 679 AND 680)=2;
++  ASSERT (SELECT count(*) FROM regression_vacuum WHERE id>679 AND id<681)=1;
++  ASSERT (SELECT count(*) FROM regression_vacuum WHERE id=99999)=0;
++END $$;
++SET enable_indexscan=off;
++SET enable_bitmapscan=on;
++EXPLAIN (COSTS OFF) SELECT v FROM regression_vacuum WHERE id=680;
++DO $$ BEGIN
++  ASSERT (SELECT count(*) FROM regression_vacuum WHERE id=680)=1,
++         'Bitmap scan omitio la fila superviviente';
++END $$;
++RESET enable_seqscan;
++RESET enable_indexscan;
++RESET enable_bitmapscan;
++REINDEX INDEX regression_vacuum_idx;
++SET enable_seqscan=off;
++DO $$ BEGIN
++  ASSERT (SELECT count(*) FROM regression_vacuum WHERE id=680)=1;
++END $$;
++RESET enable_seqscan;
++DROP TABLE regression_vacuum;
++\echo === separadores repetidos y pagina primaria vacia tras VACUUM
++CREATE TABLE regression_vacuum(id int, v text);
++INSERT INTO regression_vacuum SELECT g,'base' FROM generate_series(1,679) g;
++INSERT INTO regression_vacuum SELECT 680,'base' FROM generate_series(1,1357);
++INSERT INTO regression_vacuum VALUES (681,'base');
++SET isam_am.fill_pct=100;
++CREATE INDEX regression_vacuum_idx ON regression_vacuum USING isam_am(id);
++RESET isam_am.fill_pct;
++INSERT INTO regression_vacuum VALUES (680,'superviviente');
++DELETE FROM regression_vacuum WHERE id=680 AND v='base';
++VACUUM regression_vacuum;
++SET enable_seqscan=off;
++SET enable_bitmapscan=off;
++DO $$ BEGIN
++  ASSERT (SELECT count(*) FROM regression_vacuum WHERE id=680)=1,
++         'Separadores repetidos o pagina vacia ocultaron el overflow';
++  ASSERT (SELECT count(*) FROM regression_vacuum WHERE id BETWEEN 680 AND 681)=2;
++END $$;
++RESET enable_seqscan;
++RESET enable_bitmapscan;
++DROP TABLE regression_vacuum;
++\echo OK: caso-vacuum.sql devuelve la fila superviviente por Index Scan y Bitmap Scan

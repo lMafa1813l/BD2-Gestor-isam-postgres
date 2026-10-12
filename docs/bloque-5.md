@@ -1,5 +1,10 @@
 # Bloque 5: datasets, workloads y benchmark preliminar
 
+> Registro histórico del prototipo. Las definiciones D2/D3, repeticiones y cuotas
+> aquí descritas fueron sustituidas por `run_bench.py`, los generadores actuales,
+> el README y la metodología de `report.tex`. No usar sus resultados de muestra
+> como experimentos oficiales corregidos.
+
 ## Importante: definiciones asumidas
 La propuesta fija que D1/D2/D3 son enteros (D3 sesgado) y que W1/W2 son igualdad y W4 rango, pero no describe cada uno al detalle. Estas son las definiciones usadas aquí. **Si la rúbrica define otras, solo hay que cambiar `datasets/*.sql` y `workloads/*.pgb`; el runner no se toca.**
 

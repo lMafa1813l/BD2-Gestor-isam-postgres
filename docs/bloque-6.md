@@ -1,5 +1,11 @@
 # Bloque 6: rendimiento a escala y ajustes de overflow
 
+> Registro histórico de optimizaciones y muestras preliminares. La entrega
+> revisada ejecuta cinco trayectorias independientes mediante `run_overflow.py`,
+> conserva el relleno durante REINDEX y publica evidencia en `docs/results/`.
+> Los estados "pendiente en 18.6" y cifras antiguas de esta bitácora no describen
+> la validación actual; consultar `report.tex` y `docs/defensa.md`.
+
 ## Resumen
 | Cambio | Antes | Después |
 |---|---|---|

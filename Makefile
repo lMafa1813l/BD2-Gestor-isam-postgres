@@ -11,9 +11,12 @@ overflow:        ## Bloque 6: experimento de overflow (INSERT_MODE=dist|narrow, 
 	./docker/overflow.sh
 crash-load:      ## Bloque 6: kill del servidor bajo carga concurrente de inserts y verificacion del indice
 	./docker/crash_load.sh
-report:          ## Bloque 6: resumen en Markdown y graficos PNG del ultimo CSV de benchmarks/results/
-	python3 benchmarks/summarize.py
-	python3 benchmarks/plot.py
+report:          ## validar resultados corregidos y generar tablas/figuras del informe
+	python3 benchmarks/build_report.py
+demo:            ## defensa: igualdad, ausencia, rango, overflow, VACUUM y REINDEX
+	./docker/demo.sh
+pdf:             ## informe de Etapa I (requiere pdflatex/TeX Live)
+	latexmk -pdf -interaction=nonstopmode -halt-on-error report.tex
 clean:
 	$(MAKE) -C tests clean
-.PHONY: test integration crash bench overflow crash-load report clean
+.PHONY: test integration crash bench overflow crash-load report demo pdf clean

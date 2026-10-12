@@ -347,6 +347,45 @@ static void test_tail_pointer(void)
     free(r.a);
 }
 
+static int dead_first_original(const IsamEntry *e, void *arg)
+{
+    IsamKey key = *(IsamKey *) arg;
+    return e->key == key && e->tid_blk < 10000000;
+}
+
+static void test_vacuum_primary_min(void)
+{
+    printf("[8] VACUUM eleva el minimo primario pero conserva claves menores en overflow\n");
+    const char *path = "/tmp/t_i_vacuum_min.isam";
+    IsamFile f;
+    Ref r;
+    IsamKey boundary = ISAM_DATA_CAPACITY;
+    uint64_t removed, remaining;
+    build_ref(&f, path, &r, 2 * ISAM_DATA_CAPACITY, 1, 100, 1);
+    insert_key(&f, &r, boundary);
+    CHECK(isam_delete_if(&f, dead_first_original, &boundary, &removed, &remaining) == ISAM_OK);
+    CHECK(removed == 1 && remaining == r.n - 1);
+    uint64_t keep = 0;
+    for (uint64_t i = 0; i < r.n; i++)
+        if (!dead_first_original(&r.a[i], &boundary)) r.a[keep++] = r.a[i];
+    r.n = keep;
+    verify_eq(&f, &r, boundary);
+    verify_range(&f, &r, boundary - 1, boundary);
+    verify_range(&f, &r, boundary, boundary);
+    verify_range(&f, &r, boundary + 1, boundary + 2);
+    IsamScan scan;
+    IsamEntry e;
+    IsamBound lo = {1, 0, boundary}, hi = {1, 0, boundary + 1};
+    CHECK(isam_scan_begin(&scan, &f, lo, hi) == ISAM_OK);
+    CHECK(isam_scan_next(&scan, &e) == 0);
+    CHECK(isam_close(&f) == ISAM_OK);
+    CHECK(isam_open(&f, path, 0) == ISAM_OK);
+    verify_eq(&f, &r, boundary);
+    isam_close(&f);
+    unlink(path);
+    free(r.a);
+}
+
 int main(void)
 {
     test_empty();
@@ -356,6 +395,7 @@ int main(void)
     test_persistence();
     test_delete();
     test_tail_pointer();
+    test_vacuum_primary_min();
     printf("\n%d verificaciones, %d fallos\n", checks, fails);
     return fails ? 1 : 0;
 }

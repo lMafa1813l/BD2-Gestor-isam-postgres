@@ -5,3 +5,8 @@ benchmarks
 docs
 tests
 .git
+*.o
+*.so
+*.bc
+.cache
+report.*

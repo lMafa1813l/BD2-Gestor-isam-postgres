@@ -1,0 +1,36 @@
+{
+  "schema": 2,
+  "status": "completed",
+  "smoke": false,
+  "n": 100000,
+  "reps": 5,
+  "dataset": "d1",
+  "mode": "narrow",
+  "batches": 6,
+  "batch_rows": 20000,
+  "hot_queries": 1000,
+  "window": 100,
+  "version": "PostgreSQL 18.6 on x86_64-pc-linux-gnu, compiled by gcc (Debian 14.2.0-19) 14.2.0, 64-bit",
+  "started_utc": "2026-10-12T02:12:44.669356+00:00",
+  "seed_base": 42000,
+  "data_seed": 0.42,
+  "insert_seed_formula": "((rep*100+batch)%10000)/10000",
+  "clients": 1,
+  "configs": [
+    "btree",
+    "isam60",
+    "isam80",
+    "isam100",
+    "isam80t25"
+  ],
+  "fill_reindex": "Se vuelve a fijar el relleno de cada configuración antes de REINDEX",
+  "settings": "fsync=on\nfull_page_writes=on\njit=off\nmaintenance_work_mem=65536\nmax_parallel_workers_per_gather=0\nshared_buffers=16384\nsynchronous_commit=on\nwork_mem=4096",
+  "input_sha256": {
+    "benchmarks/run_overflow.py": "7f8ca7ee516ff50161f7875fcb701fdabb1aca163e79f1f79810557413da1e18",
+    "benchmarks/run_bench.py": "5b410b8e9187517d77f002f2cf8a7c1de141bce785ceab8c99c9ff2a4742976b",
+    "datasets/d1.sql": "f9975c6bdfbdf7a271bbd0b13b78d6fbb9b4106aba41509ae66c0ebda24622ad",
+    "workloads/w6_eq_hot.pgb": "0e55c0941d4a2f64976f96ab5c37b6d986d04acb30b10e1d0961c3a8cfd3a312"
+  },
+  "completed_utc": "2026-10-12T02:16:10.984307+00:00",
+  "csv_sha256": "d48a0cf9245f669fe59c0895a312fa0a984ca1d3a32211c8f209846701407959"
+}
