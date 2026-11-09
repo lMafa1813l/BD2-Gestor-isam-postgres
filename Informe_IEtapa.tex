@@ -389,13 +389,35 @@ Deltas de GenericXLog no equivalen a medir \code{wal_compression}.
 
 \subsection{Entorno y diseño controlado}
 
-Para garantizar la reproducibilidad y estabilidad de los experimentos, el entorno de pruebas se desplegó sobre una compilación controlada de PostgreSQL. La imagen base y las dependencias del sistema se verificaron mediante protocolos de seguridad y firmas criptográficas SHA-256, registrando de manera exhaustiva los metadatos y parámetros del servidor en cada ejecución experimental.
+El entorno de pruebas utilizó una compilación controlada de PostgreSQL 18.6.
+La imagen base y las fuentes se identificaron mediante sumas de comprobación
+SHA-256; las descargas conservaron TLS y los paquetes del sistema su verificación
+de firmas. Una suma SHA-256 permite verificar contenido, pero no es una firma
+digital. Los metadatos guardan la versión y los parámetros de cada corrida.
 
-El experimento se llevó a cabo en un entorno virtualizado con límites estrictos de recursos, asignando una cuota efectiva de 4 núcleos de CPU y aproximadamente 33 GiB de memoria RAM. Esta delimitación permitió aislar el rendimiento real del motor de base de datos y evitar interferencias causadas por la variabilidad del sistema host.
+La ejecución registrada tenía una cuota efectiva de cuatro CPU equivalentes y
+un límite de memoria cgroup de 32 GiB (34\,359\,738\,368 bytes), según
+\code{docs/results/resource-limits.json}. Estos límites restringen recursos;
+no garantizan aislamiento frente a otras actividades del sistema anfitrión.
 
-Con el objetivo de evaluar las alternativas de manera imparcial, se desactivaron la compilación JIT (\textit{Just-In-Time}) y la ejecución paralela de consultas (fijando \texttt{max\_parallel\_maintenance\_workers = 0}). Sin embargo, se mantuvieron habilitados los mecanismos estándar de durabilidad y consistencia del motor, como \texttt{fsync}, la confirmación síncrona y la escritura en el registro WAL. Las evaluaciones de rendimiento se realizaron mediante la herramienta \texttt{pgbench} con hasta 4 clientes concurrentes (un hilo por cliente), reportando la mediana de las latencias promedio obtenidas entre réplicas.
+Se desactivaron JIT y el paralelismo mediante los parámetros siguientes:
+\begin{itemize}
+\item Consultas: \code{max_parallel_workers_per_gather=0}.
+\item Construcción: \code{max_parallel_maintenance_workers=0}.
+\end{itemize}
+Se mantuvieron habilitados
+\code{fsync}, \code{synchronous_commit} y \code{full_page_writes}.
+El benchmark principal utilizó cuatro clientes y cuatro hilos de \code{pgbench};
+el experimento adicional de overflow utilizó un cliente. Las tablas presentan
+la mediana de las latencias medias por réplica, no percentiles de consultas
+individuales.
 
-Finalmente, antes de evaluar cada alternativa o repetición, se restauró el estado inicial de la base de datos, validando la integridad, unicidad y dominios de los datos, seguido de un procedimiento de mantenimiento con \texttt{VACUUM ANALYZE}. La metodología contempla un escenario de prueba sobre datos previamente leídos (caché caliente), asegurando condiciones idénticas y aisladas de procesos externos durante la toma de mediciones.
+Antes de cada alternativa y repetición se recargó la tabla, se validaron cantidad,
+unicidad y dominio, y se ejecutó \code{VACUUM ANALYZE}. El procedimiento utiliza
+datos previamente leídos y no constituye una prueba de caché fría. Se mantuvo
+el mismo protocolo y se bloquearon demostraciones y pruebas de caída concurrentes
+sobre el mismo contenedor. No se afirma que el estado de caché fuera idéntico
+ni que se eliminaran todas las interferencias externas.
 
 \subsection{Datasets y cargas}
 

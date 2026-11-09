@@ -22,3 +22,15 @@ report.toc
 report.fls
 report.fdb_latexmk
 *.bc
+
+.venv-dist/
+.secrets/
+.env
+.env.*
+Informe_*.aux
+Informe_*.log
+Informe_*.out
+Informe_*.toc
+Informe_*.fls
+Informe_*.fdb_latexmk
+distributed/results/

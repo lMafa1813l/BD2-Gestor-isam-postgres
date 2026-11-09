@@ -1,0 +1,142 @@
+{
+  "status": "completed",
+  "started_utc": "2026-11-09T01:22:14.441831+00:00",
+  "n": 1000000,
+  "reps": 5,
+  "ops": 100,
+  "seed": 42000,
+  "configs": [
+    "isam"
+  ],
+  "strategies": [
+    "regional",
+    "hash"
+  ],
+  "profiles": [
+    "balanced"
+  ],
+  "latency_modes": [
+    "base"
+  ],
+  "smoke": false,
+  "link_model_ms": {
+    "A-B": 20,
+    "A-C": 40,
+    "B-C": 25
+  },
+  "link_model": "Simulated additive RTT per remote destination before actual SQL, no network shaping",
+  "transfer_method": "eth0 RX/TX deltas per node, protocol/client/FDW included; opposite endpoints double count",
+  "input_hashes": {
+    "distributed/manage.py": "b01f93f1b18ddf7ade909893fef37d47d84cb13be4419a3dffe50f6ccb5a78c5",
+    "distributed/experiment.py": "778ce8016af3ad2f5e20332f4002611412a188128ed9ac4f2681adcb24cafd38",
+    "distributed/compose.yml": "7df1a2f7c43966bfe3e9edaee1407d996c03a28686f2c8116a2ebf8fb72a41d7",
+    "distributed/run.sh": "466944213a24f14ff15e6ded8159d430a861edefb06ba6577d0a94f48b2f98bf",
+    "distributed/db.py": "67b2318c4950eab52e0f6005ef83a69699faf9caa2855be3d43bf6318013a131",
+    "distributed/summarize.py": "de499c4156cd37f05e3101bac2b1eb8311cb4bfb2232d2f472110901c8f52bd1",
+    "distributed/validate.py": "47882ef9d4b241b8e84079703b7b7d1437cb79d07ae6b95f93e22c1f6d20e6d4"
+  },
+  "python_version": "3.12.14",
+  "docker_images": {
+    "a": "sha256:f874571aab75ba7c4955c3c55f46d931ee4b228b95dfaaeb355449a8b39555ff",
+    "b": "sha256:f874571aab75ba7c4955c3c55f46d931ee4b228b95dfaaeb355449a8b39555ff",
+    "c": "sha256:f874571aab75ba7c4955c3c55f46d931ee4b228b95dfaaeb355449a8b39555ff"
+  },
+  "isam_source_sha256": {
+    "isam_am/isam_am--1.0--1.1.sql": "3320b6687f59e2e67923737bc9f8710e13292d91d92f768c0fa6ea251cd1cba7",
+    "isam_am/isam_am--1.0.sql": "365411dbbaf1e0062094eea85a64e6f81eff68d90f5db19cde67749c47ea73d3",
+    "isam_am/isam_am.h": "a67d7bb70066b5628de078e20613ec436d8ab93c21f06fd2e01929a082a065a1",
+    "isam_am/isam_am_build.c": "40dee084446d10e2c96edd29d473a3bf9031f8c1043b24ebe89f0da75b3c5250",
+    "isam_am/isam_am_cost.c": "b3dd64e5445bf59de6f64fbfb4caaf79909a06978ba183ea4545f0251a993eb2",
+    "isam_am/isam_am_insert.c": "46f64bd5682c65bbdd5e096bfeca9b71023ce120bb7a1f43cc42063c47cf0c21",
+    "isam_am/isam_am_scan.c": "16befc81cf58741526c61a119ea39cf4d0d917d084f354791ea76316942e297d",
+    "isam_am/isam_am_stats.c": "1279a5f82f16c0dbebcb27b706cc6edefb1e274d82c1c04ec214012f28c17308",
+    "isam_am/isam_am_vacuum.c": "d8358731dc3867177269c41f0a11a8dc4b2743fa6c7913bf68f55b35e3cadab2",
+    "isam_am/isam_handler.c": "d3003b92a120d4c2c571e2cfa26d6e35bd0cf9c8c8661f7b2c3e9b37364b3013",
+    "isam_am/core/isam_core.h": "fbee3a2ef981ed80648ccf5c5228c6c3558eba845a865130b7bf847a532cbac1",
+    "isam_am/core/isam_index.c": "541f7fe558659f1c6173294713183241700c05c4cb9112a8ab9ea2db93e0dba4",
+    "isam_am/core/isam_index.h": "43e59b00ad724bf56dd54615e8f257293147a2b3da05c54830a71cf9b128cd29",
+    "isam_am/core/isam_insert.c": "0dc4bc0d84bc22784322551be9fe5d136448397d8d4e6e756d893c6ef3fc898f",
+    "isam_am/core/isam_insert.h": "ccfc134626b66779e0e095e35f37d680326bad33dd42a7e675350ecfc998fab8",
+    "isam_am/core/isam_io.c": "e0f449cd43e291eac6ba623f717b0383452f58380c3576ff2dde2ff69826bddf",
+    "isam_am/core/isam_io.h": "06dca9bd4afb47819275bb33f5a70e36e8b87cbd561f2a46502132437bed6d80",
+    "isam_am/core/isam_io_file.c": "42c242c83b3d015b6155dedf018764c2911fb8ffbfd9b041cc1d83b23c84d7df",
+    "isam_am/core/isam_io_pg.c": "588b98d01329e125ea31999c31e5997506719cb52c15a462d01f7ad8a1160d07",
+    "isam_am/core/isam_layout.h": "6399dd06a44c3adf7999227e3c44409b88c46456c42dee5a22cd03f7d1e9e720",
+    "isam_am/core/isam_platform.h": "ddc9603c386d61f4f74381b31c17235978b3d4e5a1722fa1e683308a0d4a11de",
+    "isam_am/core/isam_search.c": "58d06dc27a01b35359874bbed9b67d5e7a1065ac097825e09584a4939cd9ccc4",
+    "isam_am/core/isam_search.h": "6b27b9f0d658be6662248bfed98932c938a26c8e188d5a25cba5d1ec950a78a8",
+    "isam_am/core/isam_vacuum.c": "19fbcc5879fb976692064b1b9b3d095628d6722acb1cdfa09c23eca3f72dcf2b",
+    "isam_am/core/isam_vacuum.h": "3a312279705fb0e3484fd938d542deb364bbe182bcfd5f18bfd866acfc48f8b3"
+  },
+  "git_base": "b6b2d9fec5abadbafeaa01a6d17bca4b1597d1b0",
+  "platform": "Linux-6.18.57-x86_64-with-glibc2.41",
+  "host_cpus": 5,
+  "host_memory": "MemTotal:       34906004 kB",
+  "cgroup": {
+    "cpu.max": "400000 100000",
+    "memory.max": "34359738368"
+  },
+  "nodes": {
+    "a": {
+      "version": "PostgreSQL 18.6 on x86_64-pc-linux-gnu, compiled by gcc (Debian 14.2.0-19) 14.2.0, 64-bit",
+      "settings": {
+        "fsync": "on",
+        "full_page_writes": "on",
+        "jit": "off",
+        "max_parallel_maintenance_workers": "0",
+        "max_parallel_workers_per_gather": "0",
+        "shared_buffers": "16384",
+        "synchronous_commit": "on"
+      }
+    },
+    "b": {
+      "version": "PostgreSQL 18.6 on x86_64-pc-linux-gnu, compiled by gcc (Debian 14.2.0-19) 14.2.0, 64-bit",
+      "settings": {
+        "fsync": "on",
+        "full_page_writes": "on",
+        "jit": "off",
+        "max_parallel_maintenance_workers": "0",
+        "max_parallel_workers_per_gather": "0",
+        "shared_buffers": "16384",
+        "synchronous_commit": "on"
+      }
+    },
+    "c": {
+      "version": "PostgreSQL 18.6 on x86_64-pc-linux-gnu, compiled by gcc (Debian 14.2.0-19) 14.2.0, 64-bit",
+      "settings": {
+        "fsync": "on",
+        "full_page_writes": "on",
+        "jit": "off",
+        "max_parallel_maintenance_workers": "0",
+        "max_parallel_workers_per_gather": "0",
+        "shared_buffers": "16384",
+        "synchronous_commit": "on"
+      }
+    }
+  },
+  "artifacts_sha256": {
+    "r1_hash_isam_balanced_base/plans.json": "21b99fd98ecb54b0a09c2dd4c5d694cec41e732abebe1f352ed557a0c1832528",
+    "r1_hash_isam_balanced_base/trial.json": "a9cbb7b588235fde4600a308de0d1fcd1eb6c85702cff33a338b4f507ac06d23",
+    "r3_regional_isam_balanced_base/plans.json": "275b8b9f96ad961f6fc2c49fb3698cc772d69dc8b8a543a88162cfd35f09a48d",
+    "r3_regional_isam_balanced_base/trial.json": "258f8e3c9a1021fea61d3a3b82377dd82b0834b7e5fae16ab3824976bbb399ad",
+    "r5_hash_isam_balanced_base/plans.json": "fd6271a2f74cd06aec87bf8755e43366a2b3595b2f853d1b12b0277441e03db8",
+    "r5_hash_isam_balanced_base/trial.json": "a64009a3f56dca7bb055858d942547414a4af8a513d95249cdc10b53682d23c5",
+    "r2_regional_isam_balanced_base/plans.json": "d7c52eecaee189083e84dbc20d1d54bcd74768217db1e8c9160bd9b9b1f9b03f",
+    "r2_regional_isam_balanced_base/trial.json": "a5e2608f330a8a0aac682f50c5ae0ee55c33b9aaac1f663f2af8395f9edb6b4d",
+    "r4_hash_isam_balanced_base/plans.json": "4d16060bb4af896907df13140b699673d64bc484873e3946f61918e668b94410",
+    "r4_hash_isam_balanced_base/trial.json": "14e949dd6efce95ee3f67bcc444251039bacbf074236178ea3ef709f9b303931",
+    "r2_hash_isam_balanced_base/plans.json": "7442254600006435ba4cf89d97d77077b0b8e62080ec231c823793f70bb2b461",
+    "r2_hash_isam_balanced_base/trial.json": "9a22646e6e1179d91ea2ef19b130ead078eba98d50daf72dc9ec6a1409bf0d4b",
+    "r5_regional_isam_balanced_base/plans.json": "30b6debcdc15c91e82f9ebc37fea3da73e7f74e4ba7cb665b31a5bc919b56ef5",
+    "r5_regional_isam_balanced_base/trial.json": "47e81ca73a6f5e4effcc01ae46e90e5a7bea8a355adc76a7e724b55515d542c3",
+    "r1_regional_isam_balanced_base/plans.json": "56c3fdaa54becff9405eb16434f4c62a155fb3f6eb6d94242abb42b5df3aa733",
+    "r1_regional_isam_balanced_base/trial.json": "75177354406f1eaeb61985807228703cf2fbf263c1441399f3224ae9f2ec818f",
+    "r4_regional_isam_balanced_base/plans.json": "f8068947b71e32b4a7e618bc8e2e7e0c06f8aff6d27358532122974f6e25a50b",
+    "r4_regional_isam_balanced_base/trial.json": "c87df2f904c6670bb86ade0d8c041514c8ccc8aca88c942428cd7ff0084b7221",
+    "r3_hash_isam_balanced_base/plans.json": "086f9dbe04dbb49140ef1848ff655ff399d32f124dcef90723bd3a96aed7e0f6",
+    "r3_hash_isam_balanced_base/trial.json": "7084d4f55ac11102f3882adc990062f3bd2eee87bb00b2bb7ba4b4cac7c0d6b1"
+  },
+  "csv_sha256": "b6bf73510e0f1f95035cc1b2531ef52f7274815743f5bbabc0fd32a02a441e03",
+  "completed_utc": "2026-11-09T01:25:28.480117+00:00",
+  "observations": 10
+}

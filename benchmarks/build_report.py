@@ -39,7 +39,19 @@ def main():
     parser=argparse.ArgumentParser()
     parser.add_argument('--bench',type=Path,default=ROOT/'docs/results/bench_corrected.csv')
     parser.add_argument('--overflow',type=Path,default=ROOT/'docs/results/overflow_corrected.csv')
+    parser.add_argument('--output-dir',type=Path,default=ROOT/'docs/results',
+                        help='Directorio para tablas, figuras y validación; no modifica los CSV de entrada')
+    parser.add_argument('--report',type=Path,default=ROOT/'Informe_IEtapa.tex',
+                        help='Fuente LaTeX existente cuyos bloques de resultados se actualizarán')
     args=parser.parse_args()
+    report=args.report.resolve()
+    content=report.read_text()  # Fallar antes de escribir si la ruta no existe.
+    for name in ('BENCHMARK','OVERFLOW'):
+        if f'% BEGIN GENERATED {name}\n' not in content or f'% END GENERATED {name}' not in content:
+            raise ValueError(f'Faltan marcadores de resultados {name} en {report}')
+    out=args.output_dir.resolve()
+    import os
+    figure_path=lambda name: Path(os.path.relpath(out/'figures'/name,report.parent)).as_posix()
     b,bm=load(args.bench);o,om=load(args.overflow)
     if set(bm['sizes'])!={100000,500000,1000000} or set(bm['datasets'])!={'d1','d2','d3'} or set(bm['configs'])!={'none','btree','isam'}:
         raise ValueError('Falta algún tamaño/dataset/configuración obligatorio')
@@ -74,7 +86,7 @@ def main():
             expected=om['batch_rows']*(om['batches'] if step=='reindex' else int(step))
             if any(int(x['rows'])!=expected or int(x['transactions'])!=om['hot_queries'] for x in rows):
                 raise ValueError('Cuota/estado de overflow incorrecto')
-    out=ROOT/'docs/results';out.mkdir(parents=True,exist_ok=True)
+    out.mkdir(parents=True,exist_ok=True)
     tex=[f'La corrida verificada contiene {len(b)} observaciones, {27*bm["reps"]} cargas independientes y {18*bm["reps"]} construcciones de índices. El IQR se indica entre corchetes. Todos los conteos y huellas entre alternativas fueron verificados.\n']
     tex.append('Versión registrada: '+bm['version'].replace('_','\\_')+'.\\par\n')
     rows=[]
@@ -146,7 +158,7 @@ def main():
                 ax.plot([100,500,1000],vals,marker='o',label=cfg,color=color)
             ax.set(title=ds.upper(),xlabel='Miles de filas');ax.set_yscale('log');ax.grid(alpha=.2)
         axes[0].set_ylabel('Mediana de latencia media (ms)');axes[0].legend();fig.suptitle(title+'; cinco repeticiones independientes');fig.tight_layout();fig.savefig(figures/f'{name}.pdf');plt.close(fig)
-        tex.append(f'\\begin{{figure}}[htbp]\\centering\\includegraphics[width=\\linewidth]{{docs/results/figures/{name}.pdf}}\\caption{{{title}: escalabilidad observada bajo el protocolo registrado.}}\\end{{figure}}\n')
+        tex.append(f'\\begin{{figure}}[htbp]\\centering\\includegraphics[width=\\linewidth]{{{figure_path(name+'.pdf')}}}\\caption{{{title}: escalabilidad observada bajo el protocolo registrado.}}\\end{{figure}}\n')
     (out/'benchmark-tables.tex').write_text('\n'.join(tex))
     fig,ax=plt.subplots(figsize=(8,4))
     for cfg in om['configs']:
@@ -155,12 +167,10 @@ def main():
         ax.plot([int(s)*om['batch_rows']/1000 for s in steps],values,marker='o',label=cfg)
     ax.set(xlabel='Miles de filas insertadas',ylabel='Mediana de latencia media caliente (ms)',title='Concentración y reorganización; cinco trayectorias')
     ax.legend();ax.grid(alpha=.2);fig.tight_layout();fig.savefig(figures/'overflow.pdf');plt.close(fig)
-    ot.append('\\begin{figure}[htbp]\\centering\\includegraphics[width=.95\\linewidth]{docs/results/figures/overflow.pdf}\\caption{Latencia caliente por lote. Los puntos de políticas incluyen el estado posterior a reorganizar.}\\end{figure}\n\\clearpage\n')
+    ot.append('\\begin{figure}[htbp]\\centering\\includegraphics[width=.95\\linewidth]{'+figure_path('overflow.pdf')+'}\\caption{Latencia caliente por lote. Los puntos de políticas incluyen el estado posterior a reorganizar.}\\end{figure}\n\\clearpage\n')
     (out/'overflow-tables.tex').write_text('\n'.join(ot))
     # El archivo principal también conserva todas las tablas numéricas en línea.
     # Los marcadores permiten actualizar únicamente los resultados generados.
-    report=ROOT/'report.tex'
-    content=report.read_text()
     fragments=[
         ('BENCHMARK', '\\IfFileExists{docs/results/benchmark-tables.tex}{\\input{docs/results/benchmark-tables.tex}}{\n\\textbf{Las mediciones corregidas están en ejecución. Esta versión no debe\npresentarse como informe de resultados final hasta generar las tablas completas.}}', '\n'.join(tex)),
         ('OVERFLOW', '\\IfFileExists{docs/results/overflow-tables.tex}{\\input{docs/results/overflow-tables.tex}}{\n\\textbf{Pendiente incorporar el experimento corregido completo de overflow.}}', '\n'.join(ot)),
@@ -177,6 +187,6 @@ def main():
             raise ValueError(f'No se encontró el bloque de resultados {name}; conservar el informe y revisar sus marcadores')
     report.write_text(content)
     (out/'validation.json').write_text(json.dumps({'status':'validated','benchmark_observations':len(b),'overflow_observations':len(o),'independent_runs':27*bm['reps'],'independent_index_builds':18*bm['reps'],'benchmark_csv_sha256':bm['csv_sha256'],'overflow_csv_sha256':om['csv_sha256']},indent=2))
-    print('Evidencia completa validada; tablas y figuras generadas en docs/results/')
+    print(f'Evidencia completa validada; tablas y figuras en {out}; informe {report}')
 
 if __name__=='__main__': main()

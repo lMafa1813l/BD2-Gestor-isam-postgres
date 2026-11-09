@@ -10,3 +10,10 @@ tests
 *.bc
 .cache
 report.*
+
+.venv-dist/
+.secrets/
+.env
+.env.*
+distributed/results/
+docs/results/distributed/

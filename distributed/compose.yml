@@ -1,0 +1,37 @@
+name: ${DIST_PROJECT:-bd2_dist}
+x-pg: &pg
+  image: bd2-isam-distributed:18.6
+  environment:
+    POSTGRES_USER: postgres
+    POSTGRES_PASSWORD_FILE: /run/secrets/lab_password
+    POSTGRES_DB: distrib
+  command: [postgres, -c, 'listen_addresses=*', -c, jit=off, -c, max_parallel_workers_per_gather=0, -c, max_parallel_maintenance_workers=0]
+  healthcheck:
+    test: [CMD-SHELL, pg_isready -U postgres -d distrib]
+    interval: 2s
+    timeout: 2s
+    retries: 30
+  secrets: [lab_password]
+services:
+  pg-a:
+    <<: *pg
+    container_name: ${DIST_PROJECT:-bd2_dist}_a
+    ports: ["127.0.0.1:${DIST_PORT_A:-55431}:5432"]
+    volumes: [data_a:/var/lib/postgresql]
+  pg-b:
+    <<: *pg
+    container_name: ${DIST_PROJECT:-bd2_dist}_b
+    ports: ["127.0.0.1:${DIST_PORT_B:-55432}:5432"]
+    volumes: [data_b:/var/lib/postgresql]
+  pg-c:
+    <<: *pg
+    container_name: ${DIST_PROJECT:-bd2_dist}_c
+    ports: ["127.0.0.1:${DIST_PORT_C:-55433}:5432"]
+    volumes: [data_c:/var/lib/postgresql]
+volumes:
+  data_a:
+  data_b:
+  data_c:
+secrets:
+  lab_password:
+    file: ${DIST_PASSWORD_FILE:?Run distributed/run.sh to initialize local credentials}

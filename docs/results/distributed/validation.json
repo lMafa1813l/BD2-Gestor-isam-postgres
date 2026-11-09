@@ -1,0 +1,11 @@
+{
+  "status": "validated",
+  "trials": 70,
+  "workload_operations": 7000,
+  "n": 1000000,
+  "acceptance_scenarios": 10,
+  "input_csv_sha256": [
+    "a00e839c5e1bb2095eabe2118b5674d8baaa6ea357925a0bfcbcb4c6a89b7855",
+    "b6bf73510e0f1f95035cc1b2531ef52f7274815743f5bbabc0fd32a02a441e03"
+  ]
+}

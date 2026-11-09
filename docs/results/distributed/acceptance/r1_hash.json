@@ -1,0 +1,262 @@
+{
+  "status": "passed",
+  "n": 1000000,
+  "strategy": "hash",
+  "setup": {
+    "n": 1000000,
+    "strategy": "hash",
+    "index": "isam",
+    "nodes": {
+      "a": {
+        "load_ms": 4834.779851997155,
+        "build_ms": 74.92421999631915,
+        "orders": 333334,
+        "secondary_index_bytes": 5046272,
+        "all_index_bytes": 12550144
+      },
+      "b": {
+        "load_ms": 4721.184021007502,
+        "build_ms": 84.6799439896131,
+        "orders": 333332,
+        "secondary_index_bytes": 5046272,
+        "all_index_bytes": 12550144
+      },
+      "c": {
+        "load_ms": 4708.452187987859,
+        "build_ms": 89.0520240063779,
+        "orders": 333334,
+        "secondary_index_bytes": 5046272,
+        "all_index_bytes": 12550144
+      }
+    },
+    "setup_ms": 15217.571373999817
+  },
+  "initial": {
+    "nodes": {
+      "a": {
+        "count": 333334,
+        "sum_ids": 166667756638,
+        "sum_customer": 499829638,
+        "sum_amount": 4818386718,
+        "sum_quantity": 999997,
+        "sum_product": 166834638,
+        "sum_status": 0,
+        "fingerprint": "9558260dfe6c8136d9b3956140d516a1"
+      },
+      "b": {
+        "count": 333332,
+        "sum_ids": 166666064630,
+        "sum_customer": 499841630,
+        "sum_amount": 4818418226,
+        "sum_quantity": 999987,
+        "sum_product": 166835630,
+        "sum_status": 0,
+        "fingerprint": "38e14c6cda2729ad3f8dd49fa9619162"
+      },
+      "c": {
+        "count": 333334,
+        "sum_ids": 166666678732,
+        "sum_customer": 499828732,
+        "sum_amount": 4818695056,
+        "sum_quantity": 1000016,
+        "sum_product": 166829732,
+        "sum_status": 0,
+        "fingerprint": "58f3f18d93594423d6fcdd7185174859"
+      }
+    },
+    "fdw_checks": [
+      {
+        "origin": "a",
+        "count": 1000000,
+        "sum_ids": 500000500000,
+        "sum_amount_cents": 14455500000,
+        "sum_status": 0,
+        "fingerprint": "ef6bbe232c5e1865f0eabc94caff5671"
+      },
+      {
+        "origin": "b",
+        "count": 1000000,
+        "sum_ids": 500000500000,
+        "sum_amount_cents": 14455500000,
+        "sum_status": 0,
+        "fingerprint": "ef6bbe232c5e1865f0eabc94caff5671"
+      },
+      {
+        "origin": "c",
+        "count": 1000000,
+        "sum_ids": 500000500000,
+        "sum_amount_cents": 14455500000,
+        "sum_status": 0,
+        "fingerprint": "ef6bbe232c5e1865f0eabc94caff5671"
+      }
+    ],
+    "count": 1000000,
+    "sum_ids": 500000500000,
+    "sum_customer": 1499500000,
+    "sum_amount": 14455500000,
+    "sum_quantity": 3000000,
+    "sum_product": 500500000,
+    "sum_status": 0,
+    "sum_amount_cents": 14455500000,
+    "fingerprint": "ef6bbe232c5e1865f0eabc94caff5671",
+    "n": 1000000,
+    "strategy": "hash",
+    "status": "passed",
+    "catalog_fingerprint": "4d779430b8b3e25c7058d50221963252"
+  },
+  "cross_node_join": [
+    333334,
+    4818695056
+  ],
+  "replicas": {
+    "before": {
+      "a": [
+        137,
+        1
+      ],
+      "b": [
+        137,
+        1
+      ],
+      "c": [
+        137,
+        1
+      ]
+    },
+    "stale": {
+      "a": [
+        154,
+        1
+      ],
+      "b": [
+        137,
+        1
+      ],
+      "c": [
+        137,
+        1
+      ]
+    },
+    "refresh": {
+      "version": 2,
+      "rows": 1000,
+      "subscribers": {
+        "b": {
+          "version": 2,
+          "refresh_ms": 10.044394002761692
+        },
+        "c": {
+          "version": 2,
+          "refresh_ms": 9.836950004682876
+        }
+      }
+    },
+    "synced": {
+      "a": [
+        154,
+        2
+      ],
+      "b": [
+        154,
+        2
+      ],
+      "c": [
+        154,
+        2
+      ]
+    }
+  },
+  "outage": {
+    "target": "c",
+    "expected_failures": [
+      {
+        "operation": "global_read",
+        "sqlstate": "08001",
+        "error": "could not connect to server \"isam_lab_c\"\nDETAIL:  could not translate host name \"pg-c\" to address: Temporary failure in name resolution"
+      },
+      {
+        "operation": "remote_write",
+        "sqlstate": "08001",
+        "error": "could not connect to server \"isam_lab_c\"\nDETAIL:  could not translate host name \"pg-c\" to address: Temporary failure in name resolution"
+      }
+    ],
+    "local_reads": "passed",
+    "local_write_status": 1,
+    "catalog_reads": "passed",
+    "partial_global_result": false,
+    "recovery": "passed"
+  },
+  "recovered": {
+    "nodes": {
+      "a": {
+        "count": 333334,
+        "sum_ids": 166667756638,
+        "sum_customer": 499829638,
+        "sum_amount": 4818386718,
+        "sum_quantity": 999997,
+        "sum_product": 166834638,
+        "sum_status": 1,
+        "fingerprint": "9558260dfe6c8136d9b3956140d516a1"
+      },
+      "b": {
+        "count": 333332,
+        "sum_ids": 166666064630,
+        "sum_customer": 499841630,
+        "sum_amount": 4818418226,
+        "sum_quantity": 999987,
+        "sum_product": 166835630,
+        "sum_status": 0,
+        "fingerprint": "38e14c6cda2729ad3f8dd49fa9619162"
+      },
+      "c": {
+        "count": 333334,
+        "sum_ids": 166666678732,
+        "sum_customer": 499828732,
+        "sum_amount": 4818695056,
+        "sum_quantity": 1000016,
+        "sum_product": 166829732,
+        "sum_status": 0,
+        "fingerprint": "58f3f18d93594423d6fcdd7185174859"
+      }
+    },
+    "fdw_checks": [
+      {
+        "origin": "a",
+        "count": 1000000,
+        "sum_ids": 500000500000,
+        "sum_amount_cents": 14455500000,
+        "sum_status": 1,
+        "fingerprint": "ef6bbe232c5e1865f0eabc94caff5671"
+      },
+      {
+        "origin": "b",
+        "count": 1000000,
+        "sum_ids": 500000500000,
+        "sum_amount_cents": 14455500000,
+        "sum_status": 1,
+        "fingerprint": "ef6bbe232c5e1865f0eabc94caff5671"
+      },
+      {
+        "origin": "c",
+        "count": 1000000,
+        "sum_ids": 500000500000,
+        "sum_amount_cents": 14455500000,
+        "sum_status": 1,
+        "fingerprint": "ef6bbe232c5e1865f0eabc94caff5671"
+      }
+    ],
+    "count": 1000000,
+    "sum_ids": 500000500000,
+    "sum_customer": 1499500000,
+    "sum_amount": 14455500000,
+    "sum_quantity": 3000000,
+    "sum_product": 500500000,
+    "sum_status": 1,
+    "sum_amount_cents": 14455500000,
+    "fingerprint": "ef6bbe232c5e1865f0eabc94caff5671",
+    "n": 1000000,
+    "strategy": "hash",
+    "status": "passed",
+    "catalog_fingerprint": "6e3c8b95b03e3f5b7707ca1cecdd8e27"
+  }
+}

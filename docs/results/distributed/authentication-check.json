@@ -1,0 +1,10 @@
+{
+  "status": "passed",
+  "main_lab_rows": 1000000,
+  "main_lab_fingerprint": "ef6bbe232c5e1865f0eabc94caff5671",
+  "fdw_origins_verified": 3,
+  "fresh_project": "bd2_publishcheck",
+  "fresh_rows": 6000,
+  "fresh_setup_and_demo": "passed",
+  "credentials": "local ignored files; no values recorded"
+}
